@@ -1,0 +1,112 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String           @id @default(uuid())
+  fullName         String
+  email            String           @unique
+  passwordHash     String
+  role             String           @default("VIEWER")
+  departmentId     String?
+  department       Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  recordsOwned     Record[]         @relation("RecordOwner")
+  recordsCreated   Record[]         @relation("RecordCreator")
+  recordsUpdated   Record[]         @relation("RecordUpdater")
+  renewalsMade     RenewalHistory[] @relation("Renewer")
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([email])
+}
+
+model Department {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  users   User[]
+  records Record[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  color       String   @default("#6B7280")
+  records     Record[]
+}
+
+model Record {
+  id               String           @id @default(uuid())
+  name             String
+  description      String?
+  categoryId       String
+  category         Category         @relation(fields: [categoryId], references: [id])
+  ownerId          String
+  owner            User             @relation("RecordOwner", fields: [ownerId], references: [id])
+  departmentId     String
+  department       Department       @relation(fields: [departmentId], references: [id])
+  vendor           String?
+  documentNumber   String?
+  issueDate        DateTime
+  expiryDate       DateTime
+  priority         String           @default("MEDIUM")
+  remarks          String?
+  attachmentUrl    String?
+  createdById      String
+  creator          User             @relation("RecordCreator", fields: [createdById], references: [id])
+  updatedById      String?
+  updater          User?            @relation("RecordUpdater", fields: [updatedById], references: [id])
+  renewalHistories RenewalHistory[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([expiryDate])
+  @@index([categoryId])
+  @@index([departmentId])
+}
+
+model RenewalHistory {
+  id             String   @id @default(uuid())
+  recordId       String
+  record         Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  previousExpiry DateTime
+  newExpiry      DateTime
+  remarks        String?
+  renewedById    String
+  renewedBy      User     @relation("Renewer", fields: [renewedById], references: [id])
+  renewedAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  severity  String   @default("INFO")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  action     String
+  recordId   String?
+  recordName String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName   String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
