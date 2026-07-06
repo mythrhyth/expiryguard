@@ -831,7 +831,8 @@ function DashboardPage({
                   cls: "text-green-600 bg-green-50 hover:bg-green-100",
                   fn: () => {
                     const token = localStorage.getItem("accessToken");
-                    window.open(`http://localhost:5000/api/reports/export?format=csv&token=${token}`);
+                    const apiBase = (import.meta.env.VITE_API_URL as string) || "http://localhost:5000/api";
+                    window.open(`${apiBase}/reports/export?format=csv&token=${token}`);
                   },
                 },
                 {
@@ -1050,7 +1051,8 @@ function RecordsPage({ setShowAddModal }: { setShowAddModal: (v: boolean) => voi
     if (search) queryParams += `&search=${encodeURIComponent(search)}`;
     if (statusFilter !== "All") queryParams += `&status=${statusFilter}`;
     if (categoryFilter !== "All") queryParams += `&category=${categoryFilter}`;
-    window.open(`http://localhost:5000/api/reports/export?${queryParams}`);
+    const apiBase = (import.meta.env.VITE_API_URL as string) || "http://localhost:5000/api";
+    window.open(`${apiBase}/reports/export?${queryParams}`);
   };
 
   return (
@@ -1244,7 +1246,7 @@ function RecordsPage({ setShowAddModal }: { setShowAddModal: (v: boolean) => voi
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {r.attachmentUrl && (
                             <a
-                              href={`http://localhost:5000${r.attachmentUrl}`}
+                              href={`${((import.meta.env.VITE_API_URL as string) || "http://localhost:5000/api").replace(/\/api$/, "")}${r.attachmentUrl}`}
                               target="_blank"
                               rel="noreferrer"
                               className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -1817,7 +1819,8 @@ function ReportsPage() {
 
   const handleExport = (format: "excel" | "pdf") => {
     const token = localStorage.getItem("accessToken");
-    window.open(`http://localhost:5000/api/reports/export?format=${format}&token=${token}`);
+    const apiBase = (import.meta.env.VITE_API_URL as string) || "http://localhost:5000/api";
+    window.open(`${apiBase}/reports/export?format=${format}&token=${token}`);
   };
 
   if (loading || !summary || !charts) {
